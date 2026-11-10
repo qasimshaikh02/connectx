@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "name": "CONNECTX",
+    "slug": "connectx",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "android": {
+      "package": "com.qasimshaikh.connectx",
+      "adaptiveIcon": {
+        "backgroundColor": "#0A84FF"
+      }
+    }
+  }
+}
