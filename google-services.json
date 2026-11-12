@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "143073082396",
+    "project_id": "connectx-app-beaeb",
+    "storage_bucket": "connectx-app-beaeb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:143073082396:android:f2abcd0cb248c81ecf33d9",
+        "android_client_info": {
+          "package_name": "com.qasimshaikh.connectx"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCzTp2wYejchIM1xWQ1tyyINYck2YuUXuI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
