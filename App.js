@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { registerRootComponent } from 'expo';
+import * as ImagePicker from 'expo-image-picker';
 import {
   StyleSheet,
   Text,
@@ -56,9 +57,10 @@ function App() {
 
   const myUserId = useRef('user_' + Math.floor(1000 + Math.random() * 9000)).current;
 
+  // USER PROFILE STATE (Live Editable)
   const [userProfile, setUserProfile] = useState({
-    name: 'Qasim (CONNECTX)',
-    bio: 'Connected to live Firebase Cloud 🚀',
+    name: 'Qasim',
+    bio: 'Hey there! I am using CONNECTX 🚀',
     phone: '+91 98765 43210',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300'
   });
@@ -71,53 +73,59 @@ function App() {
   const [isSpeakerOn, setIsSpeakerOn] = useState(true);
   const [cameraFacing, setCameraFacing] = useState('front');
 
+  // Modals
   const [chatMenuVisible, setChatMenuVisible] = useState(false);
   const [chatDeleteModalTarget, setChatDeleteModalTarget] = useState(null);
   const [addStatusModalVisible, setAddStatusModalVisible] = useState(false);
   const [editProfileModalVisible, setEditProfileModalVisible] = useState(false);
   const [addFriendModalVisible, setAddFriendModalVisible] = useState(false);
 
+  // Status Viewing
   const [activeStoryGroup, setActiveStoryGroup] = useState(null);
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
 
+  // Edit Profile Inputs
   const [editName, setEditName] = useState(userProfile.name);
   const [editBio, setEditBio] = useState(userProfile.bio);
+  const [editPhone, setEditPhone] = useState(userProfile.phone);
   const [editAvatar, setEditAvatar] = useState(userProfile.avatar);
+
+  // Add Friend Inputs
   const [newFriendName, setNewFriendName] = useState('');
   const [newFriendPhone, setNewFriendPhone] = useState('');
-  const [statusCaption, setStatusCaption] = useState('');
-  const [selectedStatusPhoto, setSelectedStatusPhoto] = useState('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800');
 
-  const openDeviceGallery = (onImageSelected) => {
+  // Status Inputs
+  const [statusCaption, setStatusCaption] = useState('');
+  const [selectedStatusPhoto, setSelectedStatusPhoto] = useState(null);
+
+  // REAL NATIVE ANDROID PHONE GALLERY PICKER
+  const openDeviceGallery = async (onImageSelected) => {
     try {
-      if (typeof document !== 'undefined') {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'image/*';
-        input.onchange = (e) => {
-          const file = e.target && e.target.files && e.target.files[0];
-          if (file) {
-            const reader = new FileReader();
-            reader.onload = (uploadEvent) => {
-              if (uploadEvent.target && uploadEvent.target.result) {
-                onImageSelected(uploadEvent.target.result);
-              }
-            };
-            reader.readAsDataURL(file);
-          }
-        };
-        input.click();
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert("Permission Required", "Please allow gallery access to select your photo.");
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8
+      });
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        onImageSelected(result.assets[0].uri);
       }
     } catch (err) {
-      console.log('Gallery open error:', err);
+      Alert.alert("Gallery Error", "Could not open gallery: " + err.message);
     }
   };
 
+  // MULTIPLE STATUSES
   const [myStatuses, setMyStatuses] = useState([
     {
       id: 'my_1',
       media: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800',
-      caption: 'Live on Google Firebase Cloud 🌐',
+      caption: 'Welcome to CONNECTX 🌐',
       timeFormatted: 'Today, 9:25 AM',
       remainingHours: '24h remaining',
       viewers: []
@@ -143,6 +151,7 @@ function App() {
     }
   ]);
 
+  // Chats
   const [chats, setChats] = useState([
     {
       id: 'c1',
@@ -157,9 +166,11 @@ function App() {
     }
   ]);
 
+  // Messages
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
 
+  // Fetch Live Cloud Messages from Firebase
   const fetchCloudMessages = async () => {
     try {
       const response = await fetch(FIRESTORE_URL);
@@ -191,6 +202,7 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
+  // Send Message to Firebase Cloud
   const sendMessageToCloud = async () => {
     if (!inputText.trim()) return;
 
@@ -256,11 +268,15 @@ function App() {
     }
   };
 
+  // POST STATUS FUNCTION
   const postNewStatus = () => {
-    if (!statusCaption.trim() && !selectedStatusPhoto) return;
+    if (!statusCaption.trim() && !selectedStatusPhoto) {
+      Alert.alert("Photo Required", "Please select a photo from your gallery or write a caption.");
+      return;
+    }
     const newStatusEntry = {
       id: 'my_' + Date.now(),
-      media: selectedStatusPhoto,
+      media: selectedStatusPhoto || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800',
       caption: statusCaption.trim() || 'My Status',
       timeFormatted: 'Just now',
       remainingHours: '24h remaining',
@@ -268,17 +284,30 @@ function App() {
     };
     setMyStatuses(prev => [newStatusEntry, ...prev]);
     setStatusCaption('');
+    setSelectedStatusPhoto(null);
     setAddStatusModalVisible(false);
+    Alert.alert("Success", "Status posted successfully!");
   };
 
+  // OPEN EDIT PROFILE MODAL
+  const openEditProfileModal = () => {
+    setEditName(userProfile.name);
+    setEditBio(userProfile.bio);
+    setEditPhone(userProfile.phone);
+    setEditAvatar(userProfile.avatar);
+    setEditProfileModalVisible(true);
+  };
+
+  // SAVE PROFILE FUNCTION
   const saveProfile = () => {
     setUserProfile({
-      ...userProfile,
       name: editName.trim() || userProfile.name,
       bio: editBio.trim() || userProfile.bio,
-      avatar: editAvatar
+      phone: editPhone.trim() || userProfile.phone,
+      avatar: editAvatar || userProfile.avatar
     });
     setEditProfileModalVisible(false);
+    Alert.alert("Profile Updated", "Your name and photo have been updated!");
   };
 
   const addNewFriendByPhone = () => {
@@ -307,6 +336,7 @@ function App() {
     ? activeStoryGroup.stories[currentStoryIndex]
     : null;
 
+  // CALL SCREEN
   if (currentScreen === 'CALL') {
     return (
       <View style={[styles.callContainer, { backgroundColor: '#07090E' }]}>
@@ -322,7 +352,7 @@ function App() {
               {!isCamOff ? (
                 <View style={{ flex: 1, backgroundColor: '#1E232E', justifyContent: 'center', alignItems: 'center' }}>
                   <Ionicons name={cameraFacing === 'front' ? "person-circle" : "image-outline"} size={42} color="#0A84FF" />
-                  <Text style={{ color: '#FFF', fontSize: 10, fontWeight: '700' }}>
+                  <Text style={{ color: '#FFF', fontSize: 10, marginTop: 4, fontWeight: '700' }}>
                     {cameraFacing === 'front' ? 'Selfie Cam' : 'Rear Cam'}
                   </Text>
                   <Text style={{ color: '#8E95A5', fontSize: 8 }}>Live Cloud Feed</Text>
@@ -382,6 +412,7 @@ function App() {
     );
   }
 
+  // CHAT ROOM
   if (currentScreen === 'CHAT' && selectedChat) {
     return (
       <View style={[styles.container, { backgroundColor: colors.bg }]}>
@@ -494,6 +525,7 @@ function App() {
     );
   }
 
+  // MAIN DASHBOARD
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
@@ -512,6 +544,7 @@ function App() {
         </View>
       </View>
 
+      {/* CHATS TAB */}
       {activeTab === 'CHATS' && (
         <View style={{ flex: 1 }}>
           <View style={{ height: 105, borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
@@ -580,6 +613,7 @@ function App() {
         </View>
       )}
 
+      {/* STATUS TAB */}
       {activeTab === 'STATUS' && (
         <ScrollView style={{ flex: 1, padding: 16 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
@@ -607,6 +641,7 @@ function App() {
         </ScrollView>
       )}
 
+      {/* CALLS TAB */}
       {activeTab === 'CALLS' && (
         <FlatList
           data={chats}
@@ -626,23 +661,33 @@ function App() {
         />
       )}
 
+      {/* PROFILE TAB */}
       {activeTab === 'PROFILE' && (
         <ScrollView style={{ flex: 1, padding: 20 }}>
           <View style={{ alignItems: 'center', marginVertical: 14 }}>
-            <Image
-              source={{ uri: userProfile.avatar }}
-              style={{ width: 105, height: 105, borderRadius: 52, borderWidth: 3, borderColor: colors.primary }}
-            />
+            <View>
+              <Image
+                source={{ uri: userProfile.avatar }}
+                style={{ width: 105, height: 105, borderRadius: 52, borderWidth: 3, borderColor: colors.primary }}
+              />
+              <TouchableOpacity
+                onPress={openEditProfileModal}
+                style={styles.avatarEditPencil}
+              >
+                <Ionicons name="camera" size={16} color="#FFF" />
+              </TouchableOpacity>
+            </View>
+
             <Text style={[styles.callNameText, { color: colors.text, marginTop: 12 }]}>{userProfile.name}</Text>
             <Text style={{ color: colors.textSub, fontSize: 14, textAlign: 'center', marginTop: 4 }}>{userProfile.bio}</Text>
             <Text style={{ color: colors.primary, fontSize: 13, marginTop: 4, fontWeight: '600' }}>{userProfile.phone}</Text>
 
             <TouchableOpacity
-              onPress={() => setEditProfileModalVisible(true)}
+              onPress={openEditProfileModal}
               style={[styles.editProfileBtn, { backgroundColor: colors.primary }]}
             >
               <Ionicons name="create-outline" size={16} color="#FFF" />
-              <Text style={{ color: '#FFF', fontWeight: '700', marginLeft: 6 }}>Change Photo & Details</Text>
+              <Text style={{ color: '#FFF', fontWeight: '700', marginLeft: 6 }}>Edit Profile & Photo</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -671,6 +716,7 @@ function App() {
         </TouchableOpacity>
       </View>
 
+      {/* MODAL: DELETE CHAT */}
       <Modal visible={!!chatDeleteModalTarget} transparent animationType="fade">
         <View style={styles.modalOverlayCenter}>
           <View style={[styles.confirmDeleteCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -688,6 +734,7 @@ function App() {
         </View>
       </Modal>
 
+      {/* MODAL: ADD FRIEND */}
       <Modal visible={addFriendModalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={[styles.statusModalCard, { backgroundColor: colors.card }]}>
@@ -719,6 +766,7 @@ function App() {
         </View>
       </Modal>
 
+      {/* MODAL: ADD STATUS (REAL NATIVE GALLERY) */}
       <Modal visible={addStatusModalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={[styles.statusModalCard, { backgroundColor: colors.card }]}>
@@ -728,15 +776,27 @@ function App() {
                 <Ionicons name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
+
+            {/* REAL GALLERY PICKER BUTTON */}
             <TouchableOpacity
-              onPress={() => openDeviceGallery((selectedImg) => setSelectedStatusPhoto(selectedImg))}
+              onPress={() => openDeviceGallery((uri) => setSelectedStatusPhoto(uri))}
               style={[styles.galleryPickerBtn, { backgroundColor: colors.bg, borderColor: colors.primary }]}
             >
               <Ionicons name="images" size={32} color={colors.primary} />
               <Text style={{ color: colors.text, fontWeight: '700', marginTop: 6, fontSize: 14 }}>
-                📂 Tap to Open Phone Gallery
+                📂 Choose Photo from Real Phone Gallery
+              </Text>
+              <Text style={{ color: colors.textSub, fontSize: 11, marginTop: 2 }}>
+                {selectedStatusPhoto ? "✅ Photo Selected (Tap to change)" : "Opens your phone's Photos / Gallery"}
               </Text>
             </TouchableOpacity>
+
+            {selectedStatusPhoto && (
+              <View style={{ alignItems: 'center', marginVertical: 6 }}>
+                <Image source={{ uri: selectedStatusPhoto }} style={styles.previewImage} resizeMode="cover" />
+              </View>
+            )}
+
             <TextInput
               style={[styles.statusInput, { backgroundColor: colors.bg, color: colors.text, borderColor: colors.border }]}
               placeholder="Write a caption..."
@@ -751,20 +811,45 @@ function App() {
         </View>
       </Modal>
 
+      {/* MODAL: EDIT PROFILE & PHOTO (REAL NATIVE GALLERY) */}
       <Modal visible={editProfileModalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={[styles.statusModalCard, { backgroundColor: colors.card }]}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={[styles.sheetTitle, { color: colors.text }]}>Change Profile</Text>
+              <Text style={[styles.sheetTitle, { color: colors.text }]}>Edit Profile & Photo</Text>
               <TouchableOpacity onPress={() => setEditProfileModalVisible(false)}>
                 <Ionicons name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
+
+            {/* Photo Avatar Preview & Real Gallery Picker */}
+            <View style={{ alignItems: 'center', marginVertical: 10 }}>
+              <Image source={{ uri: editAvatar }} style={{ width: 85, height: 85, borderRadius: 42, borderWidth: 2, borderColor: colors.primary }} />
+              <TouchableOpacity
+                onPress={() => openDeviceGallery((uri) => setEditAvatar(uri))}
+                style={[styles.galleryPickerBtn, { backgroundColor: colors.bg, borderColor: colors.primary, width: '100%', marginTop: 10, paddingVertical: 10 }]}
+              >
+                <Ionicons name="camera" size={22} color={colors.primary} />
+                <Text style={{ color: colors.text, fontWeight: '700', marginTop: 4, fontSize: 13 }}>
+                  📂 Choose New Profile Photo
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={{ color: colors.textSub, fontSize: 11, marginBottom: 2 }}>Your Name</Text>
             <TextInput
-              style={[styles.editFieldInput, { backgroundColor: colors.bg, color: colors.text, borderColor: colors.border, marginTop: 10 }]}
+              style={[styles.editFieldInput, { backgroundColor: colors.bg, color: colors.text, borderColor: colors.border }]}
               value={editName}
               onChangeText={setEditName}
             />
+
+            <Text style={{ color: colors.textSub, fontSize: 11, marginBottom: 2 }}>About / Bio</Text>
+            <TextInput
+              style={[styles.editFieldInput, { backgroundColor: colors.bg, color: colors.text, borderColor: colors.border }]}
+              value={editBio}
+              onChangeText={setEditBio}
+            />
+
             <TouchableOpacity onPress={saveProfile} style={[styles.postStatusBtn, { backgroundColor: colors.primary, marginTop: 8 }]}>
               <Text style={{ color: '#FFF', fontWeight: '800' }}>Save Changes</Text>
             </TouchableOpacity>
@@ -772,6 +857,7 @@ function App() {
         </View>
       </Modal>
 
+      {/* MODAL: STORY VIEWER */}
       <Modal visible={!!activeStoryGroup} animationType="fade" transparent={false}>
         {activeStoryGroup && currentViewingStory && (
           <View style={{ flex: 1, backgroundColor: '#000' }}>
@@ -793,7 +879,6 @@ function App() {
   );
 }
 
-// CRITICAL FOR STANDALONE APK: Tells Android to launch App component
 registerRootComponent(App);
 
 const styles = StyleSheet.create({
@@ -904,7 +989,7 @@ const styles = StyleSheet.create({
   sheetTitle: { fontSize: 17, fontWeight: '800', marginBottom: 12 },
   statusInput: { height: 46, borderWidth: 1, borderRadius: 12, paddingHorizontal: 14, marginTop: 10, marginBottom: 10, fontSize: 14 },
   galleryPickerBtn: {
-    padding: 16,
+    padding: 14,
     borderRadius: 14,
     borderWidth: 1.5,
     borderStyle: 'dashed',
@@ -912,8 +997,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginVertical: 8
   },
+  previewImage: { width: 140, height: 100, borderRadius: 12 },
   postStatusBtn: { height: 46, borderRadius: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 10 },
-  editFieldInput: { height: 44, borderWidth: 1, borderRadius: 10, paddingHorizontal: 14, marginBottom: 10, fontSize: 14 },
+  editFieldInput: { height: 44, borderWidth: 1, borderRadius: 10, paddingHorizontal: 14, marginBottom: 8, fontSize: 14 },
   menuOverlay: { flex: 1, backgroundColor: 'transparent' },
   chatPopupMenu: {
     position: 'absolute',
@@ -939,6 +1025,19 @@ const styles = StyleSheet.create({
   confirmBtnRow: { flexDirection: 'row', marginTop: 20, width: '100%', justifyContent: 'space-between' },
   dialogBtn: { flex: 1, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginHorizontal: 6 },
   smallActionBtn: { width: 38, height: 38, borderRadius: 19, justifyContent: 'center', alignItems: 'center' },
+  avatarEditPencil: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#0A84FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#0B0E14'
+  },
   editProfileBtn: {
     flexDirection: 'row',
     alignItems: 'center',
