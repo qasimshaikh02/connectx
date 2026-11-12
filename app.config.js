@@ -1,12 +1,20 @@
 module.exports = {
   expo: {
     name: "CONNECTX",
-    slug: "my-chat-",
+    slug: "connectx",
     version: "1.0.0",
     orientation: "portrait",
     userInterfaceStyle: "dark",
     android: {
-      package: "com.qasimshaikh.connectx"
+      package: "com.qasimshaikh.connectx",
+      adaptiveIcon: {
+        backgroundColor: "#0A84FF"
+      },
+      permissions: [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.CAMERA"
+      ]
     },
     plugins: [
       [
