@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { registerRootComponent } from 'expo';
 import {
   StyleSheet,
   Text,
@@ -46,7 +47,7 @@ const LIGHT_THEME = {
   success: '#10B981'
 };
 
-export default function App() {
+function App() {
   const [isDark, setIsDark] = useState(true);
   const colors = isDark ? DARK_THEME : LIGHT_THEME;
 
@@ -647,6 +648,7 @@ export default function App() {
         </ScrollView>
       )}
 
+      {/* BOTTOM NAVIGATION TABS */}
       <View style={[styles.bottomNavBar, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
         <TouchableOpacity style={styles.navTab} onPress={() => setActiveTab('CHATS')}>
           <Ionicons name={activeTab === 'CHATS' ? "chatbubbles" : "chatbubbles-outline"} size={22} color={activeTab === 'CHATS' ? colors.primary : colors.textSub} />
@@ -790,6 +792,9 @@ export default function App() {
     </View>
   );
 }
+
+// CRITICAL FOR STANDALONE APK: Tells Android to launch App component
+registerRootComponent(App);
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
