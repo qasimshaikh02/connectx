@@ -1,4 +1,3 @@
-
 module.exports = {
   expo: {
     name: "CONNECTX",
@@ -6,13 +5,9 @@ module.exports = {
     version: "1.0.0",
     orientation: "portrait",
     userInterfaceStyle: "dark",
-    icon: "./icon.png",
-
     android: {
       package: "com.qasimshaikh.connectx",
-      googleServicesFile: "./google-services.json",
       adaptiveIcon: {
-        foregroundImage: "./icon.png",
         backgroundColor: "#0A84FF"
       },
       permissions: [
@@ -21,20 +16,16 @@ module.exports = {
         "android.permission.CAMERA"
       ]
     },
-
     plugins: [
-      "@react-native-firebase/app",
-      "@react-native-firebase/auth",
       [
         "expo-build-properties",
         {
-          android: {
-            kotlinVersion: "1.9.25"
+          "android": {
+            "kotlinVersion": "1.9.25"
           }
         }
       ]
     ],
-
     extra: {
       eas: {
         projectId: "2d99662d-7edc-488b-a53a-1e5c680d1ec8"
