@@ -1,20 +1,17 @@
-
 {
   "expo": {
     "name": "CONNECTX",
-    "slug": "connectx",
+    "slug": "my-chat-",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "android": {
-      "package": "com.qasimshaikh.connectx",
-      "googleServicesFile": "./google-services.json",
-      "adaptiveIcon": {
-        "backgroundColor": "#0A84FF"
-      }
+      "package": "com.qasimshaikh.connectx"
     },
-    "plugins": [
-      "@react-native-firebase/app"
-    ]
+    "extra": {
+      "eas": {
+        "projectId": "2d99662d-7edc-488b-a53a-1e5c680d1ec8"
+      }
+    }
   }
 }
