@@ -8,6 +8,7 @@ module.exports = {
     icon: "./icon.png",
     android: {
       package: "com.qasimshaikh.connectx",
+      googleServicesFile: "./google-services.json",
       adaptiveIcon: {
         foregroundImage: "./icon.png",
         backgroundColor: "#0A84FF"
