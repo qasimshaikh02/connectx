@@ -1,13 +1,15 @@
 module.exports = {
   expo: {
     name: "CONNECTX",
-    slug: "connectx",
+    slug: "my-chat-",
     version: "1.0.0",
     orientation: "portrait",
     userInterfaceStyle: "dark",
+    icon: "./icon.png",
     android: {
       package: "com.qasimshaikh.connectx",
       adaptiveIcon: {
+        foregroundImage: "./icon.png",
         backgroundColor: "#0A84FF"
       },
       permissions: [
